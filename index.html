@@ -36,10 +36,10 @@
         select, input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; box-sizing: border-box; }
         
         button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 10px; font-size: 1.1rem; cursor: pointer; margin-top: 10px; font-weight: bold; }
+        button:hover { background: #0056b3; }
         
-        .result-box { margin-top: 1.2rem; padding: 1rem; background: #f0f7ff; border-radius: 12px; font-size: 1.1rem; font-weight: bold; }
+        .result-box { margin-top: 1.2rem; padding: 1.2rem; background: #f0f7ff; border-radius: 12px; font-size: 1.1rem; font-weight: bold; line-height: 1.5; }
         
-        /* 時計カードのグリッド */
         #clockList { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 1rem; }
         .clock-card { background: #f8f9fa; padding: 10px; border-radius: 12px; border: 1px solid #eee; position: relative; }
         .clock-city { font-size: 0.8rem; color: #666; }
@@ -69,7 +69,7 @@
             <select id="toCurr"></select>
         </div>
         <button onclick="calculateCurrency()">換算する</button>
-        <div class="result-box" id="currResult">換算ボタンを押してください</div>
+        <div class="result-box" id="currResult">金額を入力して換算ボタンを<br>押してください</div>
     </div>
 
     <div id="time" class="content">
@@ -84,7 +84,7 @@
 </div>
 
 <script>
-    // 主要50カ国・地域データ
+    // 主要国のデータ
     const countries = [
         { name: "日本", curr: "円", code: "JPY", tz: "Asia/Tokyo" },
         { name: "アメリカ", curr: "ドル", code: "USD", tz: "America/New_York" },
@@ -104,23 +104,26 @@
         { name: "インド", curr: "ルピー", code: "INR", tz: "Asia/Kolkata" },
         { name: "トルコ", curr: "リラ", code: "TRY", tz: "Europe/Istanbul" },
         { name: "インドネシア", curr: "ルピア", code: "IDR", tz: "Asia/Jakarta" },
+        { name: "マレーシア", curr: "リンギット", code: "MYR", tz: "Asia/Kuala_Lumpur" },
         { name: "フィリピン", curr: "ペソ", code: "PHP", tz: "Asia/Manila" },
-        { name: "マレーシア", curr: "リンギット", code: "MYR", tz: "Asia/Kuala_Lumpur" }
-        // ※スペースの都合上20カ国ですが、同様に50カ国まで増やせます
+        { name: "メキシコ", curr: "ペソ", code: "MXN", tz: "America/Mexico_City" },
+        { name: "ニュージーランド", curr: "ドル", code: "NZD", tz: "Pacific/Auckland" },
+        { name: "アラブ首長国連邦", curr: "ディルハム", code: "AED", tz: "Asia/Dubai" },
+        { name: "スウェーデン", curr: "クローナ", code: "SEK", tz: "Europe/Stockholm" }
     ];
 
-    let pinnedCities = ["Asia/Tokyo", "America/New_York"];
+    const apiKey = 'e49db887bd065a8600690b11'; // あなたのAPIキー
+    let pinnedCities = ["Asia/Tokyo", "America/New_York", "Europe/London"];
 
     function init() {
         const fromS = document.getElementById('fromCurr');
         const toS = document.getElementById('toCurr');
         const timeS = document.getElementById('timeSelect');
 
-        countries.forEach(c => {
-            const opt1 = new Option(`${c.name} / ${c.curr} (${c.code})`, c.code);
-            const opt2 = new Option(`${c.name} / ${c.curr} (${c.code})`, c.code);
-            const opt3 = new Option(`${c.name}`, c.tz);
-            fromS.add(opt1); toS.add(opt2); timeS.add(opt3);
+        countries.sort((a, b) => a.name.localeCompare(b.name, 'ja')).forEach(c => {
+            fromS.add(new Option(`${c.name} / ${c.curr} (${c.code})`, c.code));
+            toS.add(new Option(`${c.name} / ${c.curr} (${c.code})`, c.code));
+            timeS.add(new Option(`${c.name}`, c.tz));
         });
         
         fromS.value = "JPY"; toS.value = "USD";
@@ -135,20 +138,41 @@
         document.getElementById(id).classList.add('active');
     }
 
-    function calculateCurrency() {
-        const rates = { "JPY": 1, "USD": 0.0066, "EUR": 0.0061, "GBP": 0.0053, "CNY": 0.047, "KRW": 8.8 };
+    // 最新レート取得関数
+    async function calculateCurrency() {
         const amt = document.getElementById('amount').value;
         const from = document.getElementById('fromCurr').value;
         const to = document.getElementById('toCurr').value;
-        const res = (amt / (rates[from] || 1)) * (rates[to] || 1);
-        document.getElementById('currResult').innerText = `${Number(amt).toLocaleString()} ${from} = ${res.toLocaleString(undefined,{maximumFractionDigits:2})} ${to}`;
+        const resultBox = document.getElementById('currResult');
+
+        resultBox.innerText = "最新レートを取得中...";
+
+        try {
+            const url = `https://v6.exchangerate-api.com/v6/${apiKey}/pair/${from}/${to}/${amt}`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.result === "success") {
+                const res = data.conversion_result;
+                resultBox.innerHTML = `
+                    ${Number(amt).toLocaleString()} ${from} = <br>
+                    <span style="font-size: 1.5rem; color: #007bff;">
+                        ${res.toLocaleString(undefined, {maximumFractionDigits: 2})} ${to}
+                    </span>
+                `;
+            } else {
+                resultBox.innerText = "エラー: APIキーを確認してください。";
+            }
+        } catch (error) {
+            resultBox.innerText = "接続に失敗しました。";
+        }
     }
 
     function renderClocks() {
         const list = document.getElementById('clockList');
         list.innerHTML = "";
         pinnedCities.forEach(tz => {
-            const c = countries.find(item => item.tz === tz) || {name: tz};
+            const c = countries.find(item => item.tz === tz) || {name: tz.split('/')[1]};
             const div = document.createElement('div');
             div.className = 'clock-card';
             div.innerHTML = `
