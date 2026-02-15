@@ -3,132 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Nomad - 世界通貨・時差換算</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Global Nomad - Currency & Time</title>
     <style>
-        body, html {
+        /* 背景画像の設定 */
+        body {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow-x: hidden;
-            background-color: #000;
-        }
-
-        /* 背景レイヤー */
-        .bg-travel {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            background-image: url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1600&q=80') no-repeat center center fixed;
             background-size: cover;
-            background-position: center;
-        }
-
-        .bg-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 2;
-            background: rgba(0, 0, 0, 0.4);
-        }
-
-        /* メインコンテンツ：z-index: 1000で確実に最前面 */
-        #root {
-            position: relative;
-            z-index: 1000;
-            min-height: 100vh;
-            width: 100%;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            padding: 20px;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* 背景を少し暗くして文字を見やすくする */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1;
+        }
+
+        /* メインパネル（グラスモーフィズム） */
+        .container {
+            position: relative;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        h1 { margin-bottom: 1.5rem; font-size: 1.5rem; color: #1a1a1a; }
+        .input-group { margin-bottom: 1.2rem; text-align: left; }
+        label { display: block; font-size: 0.8rem; margin-bottom: 0.4rem; color: #666; }
+        
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
             box-sizing: border-box;
         }
 
-        /* 高不透明度の白背景パネル */
-        .main-container {
-            background: rgba(255, 255, 255, 0.95) !important;
-            color: #333333 !important;
-            border-radius: 24px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        button {
             width: 100%;
-            max-width: 800px;
-            padding: 30px;
-            border: 1px solid rgba(255,255,255,0.5);
+            padding: 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 1rem;
         }
 
-        /* 文字色を黒に固定 */
-        h1, h2, p, label, div, span, select, input {
-            color: #333333 !important;
+        button:hover { background: #0056b3; }
+
+        .result-area {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-weight: bold;
         }
 
-        /* セレクトボックスと入力欄の共通スタイル */
-        select, input {
-            background: #ffffff !important;
-            border: 2px solid #dddddd !important;
-            padding: 12px !important;
-            border-radius: 12px !important;
-            font-weight: bold !important;
-            width: 100%;
-        }
-
-        select:focus, input:focus {
-            border-color: #2563eb !important;
-            outline: none;
-        }
-
-        .btn-primary {
-            background-color: #2563eb !important;
-            color: #ffffff !important;
-            font-weight: 900 !important;
-            border-radius: 12px;
-            padding: 14px;
-            transition: opacity 0.2s;
-        }
-        
-        .btn-primary:hover {
-            opacity: 0.9;
-        }
-
-        /* タブのアクティブ色 */
-        .tab-active {
-            background-color: #ffffff !important;
-            color: #2563eb !important;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+        .timezone-info { font-size: 0.9rem; color: #555; margin-top: 0.5rem; }
     </style>
-    <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.4",
-    "react-dom/client": "https://esm.sh/react-dom@^19.2.4/client",
-    "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.564.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/"
-  }
-}
-</script>
 </head>
 <body>
-    <div class="bg-travel"></div>
-    <div class="bg-overlay"></div>
+
+<div class="container">
+    <h1>Global Nomad</h1>
     
-    <div id="root">
-        <!-- JS読み込み中に真っ白にならないよう、構造をここに事前に配置することも可能ですが、
-             Reactがこの中身を入れ替えるため、JSが動けばここがアプリになります -->
+    <div class="input-group">
+        <label>金額を入力</label>
+        <input type="number" id="amount" value="10000">
     </div>
 
-    <script type="module" src="index.tsx"></script>
+    <div class="input-group">
+        <label>変換元（From）</label>
+        <select id="fromCurrency">
+            <option value="JPY">日本 / 円 (JPY)</option>
+            <option value="USD">アメリカ / ドル (USD)</option>
+            <option value="EUR">欧州連合 / ユーロ (EUR)</option>
+            <option value="GBP">イギリス / ポンド (GBP)</option>
+            <option value="KRW">韓国 / ウォン (KRW)</option>
+            <option value="CNY">中国 / 元 (CNY)</option>
+            <option value="TWD">台湾 / ドル (TWD)</option>
+            <option value="HKD">香港 / ドル (HKD)</option>
+            <option value="SGD">シンガポール / ドル (SGD)</option>
+            <option value="THB">タイ / バーツ (THB)</option>
+            <option value="AUD">オーストラリア / ドル (AUD)</option>
+            <option value="CAD">カナダ / ドル (CAD)</option>
+        </select>
+    </div>
+
+    <div class="input-group">
+        <label>変換先（To）</label>
+        <select id="toCurrency">
+            <option value="USD">アメリカ / ドル (USD)</option>
+            <option value="JPY">日本 / 円 (JPY)</option>
+            <option value="EUR">欧州連合 / ユーロ (EUR)</option>
+            <option value="GBP">イギリス / ポンド (GBP)</option>
+            <option value="VND">ベトナム / ドン (VND)</option>
+            <option value="INR">インド / ルピー (INR)</option>
+            <option value="BRL">ブラジル / レアル (BRL)</option>
+        </select>
+    </div>
+
+    <button onclick="convert()">換算する</button>
+
+    <div class="result-area" id="result">
+        換算結果がここに表示されます
+    </div>
+    <div class="timezone-info" id="timeInfo"></div>
+</div>
+
+<script>
+    // 簡易換算ロジック
+    function convert() {
+        const amount = document.getElementById('amount').value;
+        const from = document.getElementById('fromCurrency').value;
+        const to = document.getElementById('toCurrency').value;
+        
+        // 本来はAPIで取得しますが、動作確認用に簡易レートを設定
+        const rates = { "USD": 1, "JPY": 150, "EUR": 0.92, "GBP": 0.79, "VND": 24500 };
+        
+        // 簡易計算（USDベース）
+        const result = (amount / (rates[from] || 1)) * (rates[to] || 1);
+        
+        document.getElementById('result').innerText = 
+            `${Number(amount).toLocaleString()} ${from} = ${result.toLocaleString(undefined, {maximumFractionDigits: 2})} ${to}`;
+        
+        document.getElementById('timeInfo').innerText = "※最新レートを取得するにはAPIキーの設定が必要です";
+    }
+</script>
+
 </body>
 </html>
