@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Nomad - Currency & Time</title>
+    <title>Global Nomad - City Clock & Currency</title>
     <style>
         body {
             margin: 0; padding: 0;
@@ -36,15 +36,15 @@
         select, input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; box-sizing: border-box; }
         
         button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 10px; font-size: 1.1rem; cursor: pointer; margin-top: 10px; font-weight: bold; }
-        button:hover { background: #0056b3; }
         
         .result-box { margin-top: 1.2rem; padding: 1.2rem; background: #f0f7ff; border-radius: 12px; font-size: 1.1rem; font-weight: bold; line-height: 1.5; }
         
-        #clockList { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 1rem; }
-        .clock-card { background: #f8f9fa; padding: 10px; border-radius: 12px; border: 1px solid #eee; position: relative; }
-        .clock-city { font-size: 0.8rem; color: #666; }
-        .clock-time { font-size: 1.3rem; font-weight: bold; color: #007bff; margin: 5px 0; font-family: monospace; }
-        .remove-btn { background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; position: absolute; top: -5px; right: -5px; }
+        #clockList { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 1rem; }
+        .clock-card { background: #f8f9fa; padding: 12px; border-radius: 15px; border: 1px solid #eee; position: relative; text-align: left; }
+        .clock-city { font-size: 1rem; font-weight: bold; color: #1a1a1a; }
+        .clock-country { font-size: 0.7rem; color: #888; margin-bottom: 5px; }
+        .clock-time { font-size: 1.4rem; font-weight: bold; color: #007bff; font-family: 'Courier New', monospace; }
+        .remove-btn { background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 14px; cursor: pointer; position: absolute; top: -8px; right: -8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
@@ -74,9 +74,9 @@
 
     <div id="time" class="content">
         <div class="input-group">
-            <label>時計を追加する</label>
+            <label>都市を追加する</label>
             <select id="timeSelect" onchange="addClock()">
-                <option value="">-- 国を選択して追加 --</option>
+                <option value="">-- 都市を選択して追加 --</option>
             </select>
         </div>
         <div id="clockList"></div>
@@ -84,35 +84,31 @@
 </div>
 
 <script>
-    // 主要国のデータ
-    const countries = [
-        { name: "日本", curr: "円", code: "JPY", tz: "Asia/Tokyo" },
-        { name: "アメリカ", curr: "ドル", code: "USD", tz: "America/New_York" },
-        { name: "イギリス", curr: "ポンド", code: "GBP", tz: "Europe/London" },
-        { name: "欧州連合", curr: "ユーロ", code: "EUR", tz: "Europe/Paris" },
-        { name: "中国", curr: "元", code: "CNY", tz: "Asia/Shanghai" },
-        { name: "韓国", curr: "ウォン", code: "KRW", tz: "Asia/Seoul" },
-        { name: "台湾", curr: "ドル", code: "TWD", tz: "Asia/Taipei" },
-        { name: "香港", curr: "ドル", code: "HKD", tz: "Asia/Hong_Kong" },
-        { name: "シンガポール", curr: "ドル", code: "SGD", tz: "Asia/Singapore" },
-        { name: "タイ", curr: "バーツ", code: "THB", tz: "Asia/Bangkok" },
-        { name: "ベトナム", curr: "ドン", code: "VND", tz: "Asia/Ho_Chi_Minh" },
-        { name: "オーストラリア", curr: "ドル", code: "AUD", tz: "Australia/Sydney" },
-        { name: "カナダ", curr: "ドル", code: "CAD", tz: "America/Toronto" },
-        { name: "スイス", curr: "フラン", code: "CHF", tz: "Europe/Zurich" },
-        { name: "ブラジル", curr: "レアル", code: "BRL", tz: "America/Sao_Paulo" },
-        { name: "インド", curr: "ルピー", code: "INR", tz: "Asia/Kolkata" },
-        { name: "トルコ", curr: "リラ", code: "TRY", tz: "Europe/Istanbul" },
-        { name: "インドネシア", curr: "ルピア", code: "IDR", tz: "Asia/Jakarta" },
-        { name: "マレーシア", curr: "リンギット", code: "MYR", tz: "Asia/Kuala_Lumpur" },
-        { name: "フィリピン", curr: "ペソ", code: "PHP", tz: "Asia/Manila" },
-        { name: "メキシコ", curr: "ペソ", code: "MXN", tz: "America/Mexico_City" },
-        { name: "ニュージーランド", curr: "ドル", code: "NZD", tz: "Pacific/Auckland" },
-        { name: "アラブ首長国連邦", curr: "ディルハム", code: "AED", tz: "Asia/Dubai" },
-        { name: "スウェーデン", curr: "クローナ", code: "SEK", tz: "Europe/Stockholm" }
+    // 都市ベースのデータリスト
+    const locations = [
+        { city: "東京", country: "日本", curr: "円", code: "JPY", tz: "Asia/Tokyo" },
+        { city: "ニューヨーク", country: "アメリカ", curr: "ドル", code: "USD", tz: "America/New_York" },
+        { city: "ロンドン", country: "イギリス", curr: "ポンド", code: "GBP", tz: "Europe/London" },
+        { city: "パリ", country: "フランス", curr: "ユーロ", code: "EUR", tz: "Europe/Paris" },
+        { city: "シドニー", country: "オーストラリア", curr: "ドル", code: "AUD", tz: "Australia/Sydney" },
+        { city: "上海", country: "中国", curr: "元", code: "CNY", tz: "Asia/Shanghai" },
+        { city: "ソウル", country: "韓国", curr: "ウォン", code: "KRW", tz: "Asia/Seoul" },
+        { city: "台北", country: "台湾", curr: "ドル", code: "TWD", tz: "Asia/Taipei" },
+        { city: "香港", country: "香港", curr: "ドル", code: "HKD", tz: "Asia/Hong_Kong" },
+        { city: "バンコク", country: "タイ", curr: "バーツ", code: "THB", tz: "Asia/Bangkok" },
+        { city: "シンガポール", country: "シンガポール", curr: "ドル", code: "SGD", tz: "Asia/Singapore" },
+        { city: "ホーチミン", country: "ベトナム", curr: "ドン", code: "VND", tz: "Asia/Ho_Chi_Minh" },
+        { city: "トロント", country: "カナダ", curr: "ドル", code: "CAD", tz: "America/Toronto" },
+        { city: "ロサンゼルス", country: "アメリカ", curr: "ドル", code: "USD", tz: "America/Los_Angeles" },
+        { city: "ドバイ", country: "アラブ首長国連邦", curr: "ディルハム", code: "AED", tz: "Asia/Dubai" },
+        { city: "ムンバイ", country: "インド", curr: "ルピー", code: "INR", tz: "Asia/Kolkata" },
+        { city: "イスタンブール", country: "トルコ", curr: "リラ", code: "TRY", tz: "Europe/Istanbul" },
+        { city: "サンパウロ", country: "ブラジル", curr: "レアル", code: "BRL", tz: "America/Sao_Paulo" },
+        { city: "チューリッヒ", country: "スイス", curr: "フラン", code: "CHF", tz: "Europe/Zurich" },
+        { city: "ローマ", country: "イタリア", curr: "ユーロ", code: "EUR", tz: "Europe/Rome" }
     ];
 
-    const apiKey = 'e49db887bd065a8600690b11'; // あなたのAPIキー
+    const apiKey = 'e49db887bd065a8600690b11';
     let pinnedCities = ["Asia/Tokyo", "America/New_York", "Europe/London"];
 
     function init() {
@@ -120,10 +116,10 @@
         const toS = document.getElementById('toCurr');
         const timeS = document.getElementById('timeSelect');
 
-        countries.sort((a, b) => a.name.localeCompare(b.name, 'ja')).forEach(c => {
-            fromS.add(new Option(`${c.name} / ${c.curr} (${c.code})`, c.code));
-            toS.add(new Option(`${c.name} / ${c.curr} (${c.code})`, c.code));
-            timeS.add(new Option(`${c.name}`, c.tz));
+        locations.sort((a, b) => a.city.localeCompare(b.city, 'ja')).forEach(l => {
+            fromS.add(new Option(`${l.city} (${l.code})`, l.code));
+            toS.add(new Option(`${l.city} (${l.code})`, l.code));
+            timeS.add(new Option(`${l.city} (${l.country})`, l.tz));
         });
         
         fromS.value = "JPY"; toS.value = "USD";
@@ -138,46 +134,33 @@
         document.getElementById(id).classList.add('active');
     }
 
-    // 最新レート取得関数
     async function calculateCurrency() {
         const amt = document.getElementById('amount').value;
         const from = document.getElementById('fromCurr').value;
         const to = document.getElementById('toCurr').value;
         const resultBox = document.getElementById('currResult');
-
         resultBox.innerText = "最新レートを取得中...";
-
         try {
             const url = `https://v6.exchangerate-api.com/v6/${apiKey}/pair/${from}/${to}/${amt}`;
             const response = await fetch(url);
             const data = await response.json();
-
             if (data.result === "success") {
-                const res = data.conversion_result;
-                resultBox.innerHTML = `
-                    ${Number(amt).toLocaleString()} ${from} = <br>
-                    <span style="font-size: 1.5rem; color: #007bff;">
-                        ${res.toLocaleString(undefined, {maximumFractionDigits: 2})} ${to}
-                    </span>
-                `;
-            } else {
-                resultBox.innerText = "エラー: APIキーを確認してください。";
+                resultBox.innerHTML = `${Number(amt).toLocaleString()} ${from} = <br><span style="font-size: 1.6rem; color: #007bff;">${data.conversion_result.toLocaleString(undefined, {maximumFractionDigits: 2})} ${to}</span>`;
             }
-        } catch (error) {
-            resultBox.innerText = "接続に失敗しました。";
-        }
+        } catch (e) { resultBox.innerText = "接続エラー"; }
     }
 
     function renderClocks() {
         const list = document.getElementById('clockList');
         list.innerHTML = "";
         pinnedCities.forEach(tz => {
-            const c = countries.find(item => item.tz === tz) || {name: tz.split('/')[1]};
+            const l = locations.find(item => item.tz === tz) || {city: tz.split('/')[1], country: ""};
             const div = document.createElement('div');
             div.className = 'clock-card';
             div.innerHTML = `
                 <button class="remove-btn" onclick="removeClock('${tz}')">×</button>
-                <div class="clock-city">${c.name}</div>
+                <div class="clock-city">${l.city}</div>
+                <div class="clock-country">${l.country}</div>
                 <div class="clock-time" id="time-${tz.replace(/\//g, '-')}">--:--:--</div>
             `;
             list.appendChild(div);
