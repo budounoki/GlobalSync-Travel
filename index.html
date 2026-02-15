@@ -12,32 +12,14 @@
     <link rel="apple-touch-icon" href="icon-192.png">
 
     <script>
-      // サービスワーカーの登録
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('Service Worker registered!'))
-            .catch(err => console.log('Service Worker failed:', err));
+          navigator.serviceWorker.register('/sw.js');
         });
       }
     </script>
 
     <style>
-        /* ここからデザイン開始 */
-        body {
-            margin: 0; padding: 0;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background: url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1600&q=80') no-repeat center center fixed;
-            background-size: cover;
-            display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; color: #333;
-        }
-    <style>
-        /* ここからデザイン（body { ... } など）が始まる */
-        body {
-            margin: 0;
-    <style>
-
         body {
             margin: 0; padding: 0;
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -53,11 +35,10 @@
         .container {
             position: relative; z-index: 10;
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px); padding: 2rem;
+            backdrop-filter: blur(10px); padding: 1.5rem;
             border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            width: 90%; max-width: 500px; text-align: center;
+            width: 90%; max-width: 450px; text-align: center;
         }
-        /* 言語切り替えボタン */
         .lang-toggle {
             position: absolute; top: 15px; right: 20px;
             background: #eee; border: none; padding: 5px 12px;
@@ -66,27 +47,15 @@
         .tabs { display: flex; margin-bottom: 1.5rem; border-bottom: 2px solid #eee; margin-top: 10px; }
         .tab { flex: 1; padding: 12px; cursor: pointer; color: #999; font-weight: bold; }
         .tab.active { color: #007bff; border-bottom: 2px solid #007bff; }
-        
         .content { display: none; }
         .content.active { display: block; }
-
         .input-group { margin-bottom: 1rem; text-align: left; }
         label { display: block; font-size: 0.75rem; color: #666; margin-bottom: 5px; font-weight: bold; }
-        
-        .search-input {
-            width: 100%; padding: 10px; border: 1px solid #eee; border-radius: 8px 8px 0 0;
-            font-size: 0.85rem; box-sizing: border-box; background: #fafafa;
-        }
-        select, input[type="number"] {
-            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px;
-            font-size: 1rem; box-sizing: border-box; background: white;
-        }
+        .search-input { width: 100%; padding: 10px; border: 1px solid #eee; border-radius: 8px 8px 0 0; font-size: 0.85rem; box-sizing: border-box; background: #fafafa; outline: none; }
+        select, input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; box-sizing: border-box; background: white; }
         .has-search select { border-radius: 0 0 10px 10px; border-top: none; }
-
         button.main-btn { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 10px; font-size: 1.1rem; cursor: pointer; margin-top: 10px; font-weight: bold; }
-        
         .result-box { margin-top: 1.2rem; padding: 1.2rem; background: #f0f7ff; border-radius: 12px; font-size: 1.1rem; font-weight: bold; }
-        
         #clockList { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 1rem; max-height: 250px; overflow-y: auto; padding: 5px; }
         .clock-card { background: #f8f9fa; padding: 12px; border-radius: 15px; border: 1px solid #eee; position: relative; text-align: left; }
         .clock-city { font-size: 0.95rem; font-weight: bold; }
@@ -99,203 +68,9 @@
 
 <div class="container">
     <button class="lang-toggle" onclick="toggleLanguage()" id="langBtn">EN / JP</button>
-    
     <div class="tabs">
         <div id="tab-curr" class="tab active" onclick="showTab('currency')" data-i18n="tab_curr">通貨換算</div>
         <div id="tab-time" class="tab" onclick="showTab('time')" data-i18n="tab_time">世界時計</div>
     </div>
 
     <div id="currency" class="content active">
-        <div class="input-group">
-            <label data-i18n="label_amount">金額</label>
-            <input type="number" id="amount" value="10000">
-        </div>
-        <div class="input-group has-search">
-            <label data-i18n="label_from">変換元</label>
-            <input type="text" class="search-input" id="searchFrom" onkeyup="filterSelect('fromCurr', this.value)">
-            <select id="fromCurr" size="4"></select>
-        </div>
-        <div class="input-group has-search">
-            <label data-i18n="label_to">変換先</label>
-            <input type="text" class="search-input" id="searchTo" onkeyup="filterSelect('toCurr', this.value)">
-            <select id="toCurr" size="4"></select>
-        </div>
-        <button class="main-btn" onclick="calculateCurrency()" data-i18n="btn_convert">換算する</button>
-        <div class="result-box" id="currResult" data-i18n="res_init">金額を入力してください</div>
-    </div>
-
-    <div id="time" class="content">
-        <div class="input-group has-search">
-            <label data-i18n="label_add_city">都市を追加</label>
-            <input type="text" class="search-input" id="searchTime" onkeyup="filterSelect('timeSelect', this.value)">
-            <select id="timeSelect" onchange="addClock()" size="4">
-                <option value="" data-i18n="opt_select_city">-- 選択してください --</option>
-            </select>
-        </div>
-        <div id="clockList"></div>
-    </div>
-</div>
-
-<script>
-    // 翻訳データ
-    const i18n = {
-        ja: {
-            tab_curr: "通貨換算", tab_time: "世界時計", label_amount: "金額", label_from: "変換元", label_to: "変換先",
-            btn_convert: "換算する", res_init: "金額を入力してください", label_add_city: "都市を追加",
-            opt_select_city: "-- 選択してください --", getting: "取得中...", err_api: "取得失敗"
-        },
-        en: {
-            tab_curr: "Currency", tab_time: "World Clock", label_amount: "Amount", label_from: "From", label_to: "To",
-            btn_convert: "Convert", res_init: "Enter amount", label_add_city: "Add City",
-            opt_select_city: "-- Select City --", getting: "Fetching...", err_api: "Error"
-        }
-    };
-
-    let currentLang = 'ja';
-
-    const locations = [
-        { city: "東京", cityEn: "Tokyo", country: "日本", countryEn: "Japan", code: "JPY", tz: "Asia/Tokyo" },
-        { city: "ニューヨーク", cityEn: "New York", country: "アメリカ", countryEn: "USA", code: "USD", tz: "America/New_York" },
-        { city: "ロンドン", cityEn: "London", country: "イギリス", countryEn: "UK", code: "GBP", tz: "Europe/London" },
-        { city: "パリ", cityEn: "Paris", country: "フランス", countryEn: "France", code: "EUR", tz: "Europe/Paris" },
-        { city: "上海", cityEn: "Shanghai", country: "中国", countryEn: "China", code: "CNY", tz: "Asia/Shanghai" },
-        { city: "ソウル", cityEn: "Seoul", country: "韓国", countryEn: "South Korea", code: "KRW", tz: "Asia/Seoul" },
-        { city: "シンガポール", cityEn: "Singapore", country: "シンガポール", countryEn: "Singapore", code: "SGD", tz: "Asia/Singapore" },
-        { city: "シドニー", cityEn: "Sydney", country: "豪州", countryEn: "Australia", code: "AUD", tz: "Australia/Sydney" },
-        { city: "香港", cityEn: "Hong Kong", country: "香港", countryEn: "Hong Kong", code: "HKD", tz: "Asia/Hong_Kong" },
-        { city: "台北", cityEn: "Taipei", country: "台湾", countryEn: "Taiwan", code: "TWD", tz: "Asia/Taipei" },
-        { city: "バンコク", cityEn: "Bangkok", country: "タイ", countryEn: "Thailand", code: "THB", tz: "Asia/Bangkok" },
-        { city: "ホーチミン", cityEn: "Ho Chi Minh", country: "ベトナム", countryEn: "Vietnam", code: "VND", tz: "Asia/Ho_Chi_Minh" },
-        { city: "ドバイ", cityEn: "Dubai", country: "UAE", countryEn: "UAE", code: "AED", tz: "Asia/Dubai" }
-        // ... (他、必要に応じて追加)
-    ];
-
-    let pinnedCities = ["Asia/Tokyo", "America/New_York", "Europe/London"];
-
-    function init() {
-        updateUI();
-        setInterval(updateClocks, 1000);
-    }
-
-    function toggleLanguage() {
-        currentLang = currentLang === 'ja' ? 'en' : 'ja';
-        updateUI();
-    }
-
-    function updateUI() {
-        // テキストの書き換え
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            const key = el.getAttribute('data-i18n');
-            el.innerText = i18n[currentLang][key];
-        });
-
-        // 検索窓のプレースホルダ
-        document.getElementById('searchFrom').placeholder = currentLang === 'ja' ? '検索...' : 'Search...';
-        document.getElementById('searchTo').placeholder = currentLang === 'ja' ? '検索...' : 'Search...';
-        document.getElementById('searchTime').placeholder = currentLang === 'ja' ? '都市名...' : 'City name...';
-
-        // セレクトボックスの再生成
-        refreshSelects();
-        renderClocks();
-    }
-
-    function refreshSelects() {
-        const fromS = document.getElementById('fromCurr');
-        const toS = document.getElementById('toCurr');
-        const timeS = document.getElementById('timeSelect');
-        const curFrom = fromS.value || "JPY";
-        const curTo = toS.value || "USD";
-
-        fromS.innerHTML = ""; toS.innerHTML = "";
-        timeS.innerHTML = `<option value="">${i18n[currentLang].opt_select_city}</option>`;
-
-        locations.sort((a,b) => (currentLang === 'ja' ? a.city.localeCompare(b.city,'ja') : a.cityEn.localeCompare(b.cityEn))).forEach(l => {
-            const countryName = currentLang === 'ja' ? l.country : l.countryEn;
-            const cityName = currentLang === 'ja' ? l.city : l.cityEn;
-            
-            fromS.add(new Option(`${countryName} (${l.code})`, l.code));
-            toS.add(new Option(`${countryName} (${l.code})`, l.code));
-            timeS.add(new Option(`${cityName} (${countryName})`, l.tz));
-        });
-        fromS.value = curFrom; toS.value = curTo;
-    }
-
-    async function calculateCurrency() {
-        const amt = document.getElementById('amount').value;
-        const from = document.getElementById('fromCurr').value;
-        const to = document.getElementById('toCurr').value;
-        const resultBox = document.getElementById('currResult');
-        resultBox.innerText = i18n[currentLang].getting;
-
-        try {
-            const url = `/api/convert?from=${from}&to=${to}&amount=${amt}`;
-            const response = await fetch(url);
-            const data = await response.json();
-            if (data.result === "success") {
-                resultBox.innerHTML = `${Number(amt).toLocaleString()} ${from} = <br><span style="font-size: 1.6rem; color: #007bff;">${data.conversion_result.toLocaleString(undefined, {maximumFractionDigits: 2})} ${to}</span>`;
-            }
-        } catch (e) { resultBox.innerText = i18n[currentLang].err_api; }
-    }
-
-    function renderClocks() {
-        const list = document.getElementById('clockList');
-        list.innerHTML = "";
-        pinnedCities.forEach(tz => {
-            const l = locations.find(item => item.tz === tz);
-            if(!l) return;
-            const div = document.createElement('div');
-            div.className = 'clock-card';
-            div.innerHTML = `
-                <button class="remove-btn" onclick="removeClock('${tz}')">×</button>
-                <div class="clock-city">${currentLang === 'ja' ? l.city : l.cityEn}</div>
-                <div class="clock-country">${currentLang === 'ja' ? l.country : l.countryEn}</div>
-                <div class="clock-time" id="time-${tz.replace(/\//g, '-')}">--:--:--</div>
-            `;
-            list.appendChild(div);
-        });
-    }
-
-    function updateClocks() {
-        pinnedCities.forEach(tz => {
-            const el = document.getElementById(`time-${tz.replace(/\//g, '-')}`);
-            if (el) {
-                const time = new Intl.DateTimeFormat(currentLang === 'ja' ? 'ja-JP' : 'en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(new Date());
-                el.textContent = time;
-            }
-        });
-    }
-
-    function filterSelect(id, query) {
-        const select = document.getElementById(id);
-        const options = select.options;
-        for (let i = 0; i < options.length; i++) {
-            const txt = options[i].text.toLowerCase();
-            options[i].style.display = txt.includes(query.toLowerCase()) ? "" : "none";
-        }
-    }
-
-    function showTab(id) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-        document.getElementById('tab-' + (id==='currency'?'curr':'time')).classList.add('active');
-        document.getElementById(id).classList.add('active');
-    }
-
-    function addClock() {
-        const tz = document.getElementById('timeSelect').value;
-        if (tz && !pinnedCities.includes(tz)) {
-            pinnedCities.push(tz);
-            renderClocks();
-        }
-    }
-
-    function removeClock(tz) {
-        pinnedCities = pinnedCities.filter(t => t !== tz);
-        renderClocks();
-    }
-
-    window.onload = init;
-</script>
-
-</body>
-</html>
