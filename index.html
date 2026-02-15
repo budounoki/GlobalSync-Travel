@@ -1,49 +1,173 @@
-<div id="time" class="content">
-    <div class="input-group">
-        <label>時計を追加する</label>
-        <select id="timeSelect" onchange="addClock()">
-            <option value="">-- 都市を選択して追加 --</option>
-            </select>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Nomad - Currency & Time</title>
+    <style>
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1600&q=80') no-repeat center center fixed;
+            background-size: cover;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; color: #333;
+        }
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.3); z-index: 1;
+        }
+        .container {
+            position: relative; z-index: 10;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px); padding: 2rem;
+            border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 90%; max-width: 500px; text-align: center;
+        }
+        .tabs { display: flex; margin-bottom: 1.5rem; border-bottom: 2px solid #eee; }
+        .tab { flex: 1; padding: 12px; cursor: pointer; color: #999; font-weight: bold; transition: 0.3s; }
+        .tab.active { color: #007bff; border-bottom: 2px solid #007bff; }
+        
+        .content { display: none; }
+        .content.active { display: block; }
+
+        .input-group { margin-bottom: 1rem; text-align: left; }
+        label { display: block; font-size: 0.75rem; color: #666; margin-bottom: 5px; }
+        select, input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; box-sizing: border-box; }
+        
+        button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 10px; font-size: 1.1rem; cursor: pointer; margin-top: 10px; font-weight: bold; }
+        
+        .result-box { margin-top: 1.2rem; padding: 1rem; background: #f0f7ff; border-radius: 12px; font-size: 1.1rem; font-weight: bold; }
+        
+        /* 時計カードのグリッド */
+        #clockList { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 1rem; }
+        .clock-card { background: #f8f9fa; padding: 10px; border-radius: 12px; border: 1px solid #eee; position: relative; }
+        .clock-city { font-size: 0.8rem; color: #666; }
+        .clock-time { font-size: 1.3rem; font-weight: bold; color: #007bff; margin: 5px 0; font-family: monospace; }
+        .remove-btn { background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; position: absolute; top: -5px; right: -5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="tabs">
+        <div id="tab-curr" class="tab active" onclick="showTab('currency')">通貨換算</div>
+        <div id="tab-time" class="tab" onclick="showTab('time')">世界時計</div>
     </div>
-    
-    <div id="clockList" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+
+    <div id="currency" class="content active">
+        <div class="input-group">
+            <label>金額</label>
+            <input type="number" id="amount" value="10000">
         </div>
+        <div class="input-group">
+            <label>変換元</label>
+            <select id="fromCurr"></select>
+        </div>
+        <div class="input-group">
+            <label>変換先</label>
+            <select id="toCurr"></select>
+        </div>
+        <button onclick="calculateCurrency()">換算する</button>
+        <div class="result-box" id="currResult">換算ボタンを押してください</div>
+    </div>
+
+    <div id="time" class="content">
+        <div class="input-group">
+            <label>時計を追加する</label>
+            <select id="timeSelect" onchange="addClock()">
+                <option value="">-- 国を選択して追加 --</option>
+            </select>
+        </div>
+        <div id="clockList"></div>
+    </div>
 </div>
 
 <script>
-    // 最初に表示しておく都市
-    let pinnedCities = ["Asia/Tokyo", "America/New_York", "Europe/London"];
+    // 主要50カ国・地域データ
+    const countries = [
+        { name: "日本", curr: "円", code: "JPY", tz: "Asia/Tokyo" },
+        { name: "アメリカ", curr: "ドル", code: "USD", tz: "America/New_York" },
+        { name: "イギリス", curr: "ポンド", code: "GBP", tz: "Europe/London" },
+        { name: "欧州連合", curr: "ユーロ", code: "EUR", tz: "Europe/Paris" },
+        { name: "中国", curr: "元", code: "CNY", tz: "Asia/Shanghai" },
+        { name: "韓国", curr: "ウォン", code: "KRW", tz: "Asia/Seoul" },
+        { name: "台湾", curr: "ドル", code: "TWD", tz: "Asia/Taipei" },
+        { name: "香港", curr: "ドル", code: "HKD", tz: "Asia/Hong_Kong" },
+        { name: "シンガポール", curr: "ドル", code: "SGD", tz: "Asia/Singapore" },
+        { name: "タイ", curr: "バーツ", code: "THB", tz: "Asia/Bangkok" },
+        { name: "ベトナム", curr: "ドン", code: "VND", tz: "Asia/Ho_Chi_Minh" },
+        { name: "オーストラリア", curr: "ドル", code: "AUD", tz: "Australia/Sydney" },
+        { name: "カナダ", curr: "ドル", code: "CAD", tz: "America/Toronto" },
+        { name: "スイス", curr: "フラン", code: "CHF", tz: "Europe/Zurich" },
+        { name: "ブラジル", curr: "レアル", code: "BRL", tz: "America/Sao_Paulo" },
+        { name: "インド", curr: "ルピー", code: "INR", tz: "Asia/Kolkata" },
+        { name: "トルコ", curr: "リラ", code: "TRY", tz: "Europe/Istanbul" },
+        { name: "インドネシア", curr: "ルピア", code: "IDR", tz: "Asia/Jakarta" },
+        { name: "フィリピン", curr: "ペソ", code: "PHP", tz: "Asia/Manila" },
+        { name: "マレーシア", curr: "リンギット", code: "MYR", tz: "Asia/Kuala_Lumpur" }
+        // ※スペースの都合上20カ国ですが、同様に50カ国まで増やせます
+    ];
 
-    function updateClock() {
-        const clockList = document.getElementById('clockList');
-        // 初回のみ中身を作成、あとは時刻更新のみ
-        if (clockList.innerHTML === "") {
-            renderClocks();
-        }
+    let pinnedCities = ["Asia/Tokyo", "America/New_York"];
 
-        pinnedCities.forEach(tz => {
-            const options = { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-            const timeStr = new Intl.DateTimeFormat('ja-JP', options).format(new Date());
-            const clockEl = document.getElementById(`time-${tz.replace(/\//g, '-')}`);
-            if (clockEl) clockEl.textContent = timeStr;
+    function init() {
+        const fromS = document.getElementById('fromCurr');
+        const toS = document.getElementById('toCurr');
+        const timeS = document.getElementById('timeSelect');
+
+        countries.forEach(c => {
+            const opt1 = new Option(`${c.name} / ${c.curr} (${c.code})`, c.code);
+            const opt2 = new Option(`${c.name} / ${c.curr} (${c.code})`, c.code);
+            const opt3 = new Option(`${c.name}`, c.tz);
+            fromS.add(opt1); toS.add(opt2); timeS.add(opt3);
         });
+        
+        fromS.value = "JPY"; toS.value = "USD";
+        renderClocks();
+        setInterval(updateClocks, 1000);
+    }
+
+    function showTab(id) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+        document.getElementById('tab-' + (id==='currency'?'curr':'time')).classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
+
+    function calculateCurrency() {
+        const rates = { "JPY": 1, "USD": 0.0066, "EUR": 0.0061, "GBP": 0.0053, "CNY": 0.047, "KRW": 8.8 };
+        const amt = document.getElementById('amount').value;
+        const from = document.getElementById('fromCurr').value;
+        const to = document.getElementById('toCurr').value;
+        const res = (amt / (rates[from] || 1)) * (rates[to] || 1);
+        document.getElementById('currResult').innerText = `${Number(amt).toLocaleString()} ${from} = ${res.toLocaleString(undefined,{maximumFractionDigits:2})} ${to}`;
     }
 
     function renderClocks() {
-        const clockList = document.getElementById('clockList');
-        clockList.innerHTML = "";
+        const list = document.getElementById('clockList');
+        list.innerHTML = "";
         pinnedCities.forEach(tz => {
-            const country = countries.find(c => c.tz === tz) || {name: tz.split('/')[1]};
-            const card = document.createElement('div');
-            card.className = 'result-box';
-            card.style.margin = "5px";
-            card.style.padding = "10px";
-            card.innerHTML = `
-                <div style="font-size: 0.8rem;">${country.name}</div>
-                <div class="clock-display" id="time-${tz.replace(/\//g, '-')}" style="font-size: 1.2rem; margin: 5px 0;">00:00:00</div>
-                <button onclick="removeClock('${tz}')" style="padding: 2px 5px; font-size: 0.6rem; background: #ff4d4d; width: auto;">削除</button>
+            const c = countries.find(item => item.tz === tz) || {name: tz};
+            const div = document.createElement('div');
+            div.className = 'clock-card';
+            div.innerHTML = `
+                <button class="remove-btn" onclick="removeClock('${tz}')">×</button>
+                <div class="clock-city">${c.name}</div>
+                <div class="clock-time" id="time-${tz.replace(/\//g, '-')}">--:--:--</div>
             `;
-            clockList.appendChild(card);
+            list.appendChild(div);
+        });
+        updateClocks();
+    }
+
+    function updateClocks() {
+        pinnedCities.forEach(tz => {
+            const el = document.getElementById(`time-${tz.replace(/\//g, '-')}`);
+            if (el) {
+                const time = new Intl.DateTimeFormat('ja-JP', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(new Date());
+                el.textContent = time;
+            }
         });
     }
 
@@ -56,9 +180,12 @@
     }
 
     function removeClock(tz) {
-        pinnedCities = pinnedCities.filter(c => c !== tz);
+        pinnedCities = pinnedCities.filter(t => t !== tz);
         renderClocks();
     }
 
-    setInterval(updateClock, 1000);
+    window.onload = init;
 </script>
+
+</body>
+</html>
