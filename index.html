@@ -188,21 +188,35 @@
         document.getElementById(id).classList.add('active');
     }
 
-    async function calculateCurrency() {
-        const amt = document.getElementById('amount').value;
-        const from = document.getElementById('fromCurr').value;
-        const to = document.getElementById('toCurr').value;
-        const resultBox = document.getElementById('currResult');
-        resultBox.innerText = "取得中...";
-        try {
-            const url = `https://v6.exchangerate-api.com/v6/${apiKey}/pair/${from}/${to}/${amt}`;
-            const response = await fetch(url);
-            const data = await response.json();
-            if (data.result === "success") {
-                resultBox.innerHTML = `${Number(amt).toLocaleString()} ${from} = <br><span style="font-size: 1.6rem; color: #007bff;">${data.conversion_result.toLocaleString(undefined, {maximumFractionDigits: 2})} ${to}</span>`;
-            }
-        } catch (e) { resultBox.innerText = "接続エラー"; }
+   async function calculateCurrency() {
+    const amt = document.getElementById('amount').value;
+    const from = document.getElementById('fromCurr').value;
+    const to = document.getElementById('toCurr').value;
+    const resultBox = document.getElementById('currResult');
+
+    resultBox.innerText = "最新レートを取得中...";
+
+    try {
+        // 直接外部APIを叩かず、自分のVercelサーバーにリクエストを送る
+        const url = `/api/convert?from=${from}&to=${to}&amount=${amt}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.result === "success") {
+            const res = data.conversion_result;
+            resultBox.innerHTML = `
+                ${Number(amt).toLocaleString()} ${from} = <br>
+                <span style="font-size: 1.6rem; color: #007bff;">
+                    ${res.toLocaleString(undefined, {maximumFractionDigits: 2})} ${to}
+                </span>
+            `;
+        } else {
+            resultBox.innerText = "エラー: データの取得に失敗しました。";
+        }
+    } catch (error) {
+        resultBox.innerText = "接続に失敗しました。";
     }
+}
 
     function renderClocks() {
         const list = document.getElementById('clockList');
