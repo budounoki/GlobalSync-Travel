@@ -112,6 +112,8 @@
     };
 
     let currentLang = 'ja';
+    
+    // 🌍 厳選30都市・地域データ
     const locations = [
         { city: "東京", cityEn: "Tokyo", country: "日本", countryEn: "Japan", code: "JPY", tz: "Asia/Tokyo" },
         { city: "ニューヨーク", cityEn: "New York", country: "アメリカ", countryEn: "USA", code: "USD", tz: "America/New_York" },
@@ -124,7 +126,25 @@
         { city: "香港", cityEn: "Hong Kong", country: "香港", countryEn: "Hong Kong", code: "HKD", tz: "Asia/Hong_Kong" },
         { city: "バンコク", cityEn: "Bangkok", country: "タイ", countryEn: "Thailand", code: "THB", tz: "Asia/Bangkok" },
         { city: "シドニー", cityEn: "Sydney", country: "豪州", countryEn: "Australia", code: "AUD", tz: "Australia/Sydney" },
-        { city: "ドバイ", cityEn: "Dubai", country: "UAE", countryEn: "UAE", code: "AED", tz: "Asia/Dubai" }
+        { city: "ドバイ", cityEn: "Dubai", country: "UAE", countryEn: "UAE", code: "AED", tz: "Asia/Dubai" },
+        { city: "ロサンゼルス", cityEn: "Los Angeles", country: "アメリカ", countryEn: "USA", code: "USD", tz: "America/Los_Angeles" },
+        { city: "トロント", cityEn: "Toronto", country: "カナダ", countryEn: "Canada", code: "CAD", tz: "America/Toronto" },
+        { city: "ベルリン", cityEn: "Berlin", country: "ドイツ", countryEn: "Germany", code: "EUR", tz: "Europe/Berlin" },
+        { city: "ローマ", cityEn: "Rome", country: "イタリア", countryEn: "Italy", code: "EUR", tz: "Europe/Rome" },
+        { city: "マドリード", cityEn: "Madrid", country: "スペイン", countryEn: "Spain", code: "EUR", tz: "Europe/Madrid" },
+        { city: "チューリッヒ", cityEn: "Zurich", country: "スイス", countryEn: "Switzerland", code: "CHF", tz: "Europe/Zurich" },
+        { city: "イスタンブール", cityEn: "Istanbul", country: "トルコ", countryEn: "Turkey", code: "TRY", tz: "Europe/Istanbul" },
+        { city: "ムンバイ", cityEn: "Mumbai", country: "インド", countryEn: "India", code: "INR", tz: "Asia/Kolkata" },
+        { city: "サンパウロ", cityEn: "Sao Paulo", country: "ブラジル", countryEn: "Brazil", code: "BRL", tz: "America/Sao_Paulo" },
+        { city: "カイロ", cityEn: "Cairo", country: "エジプト", countryEn: "Egypt", code: "EGP", tz: "Africa/Cairo" },
+        { city: "オークランド", cityEn: "Auckland", country: "NZ", countryEn: "New Zealand", code: "NZD", tz: "Pacific/Auckland" },
+        { city: "テルアビブ", cityEn: "Tel Aviv", country: "イスラエル", countryEn: "Israel", code: "ILS", tz: "Asia/Jerusalem" },
+        { city: "メキシコシティ", cityEn: "Mexico City", country: "メキシコ", countryEn: "Mexico", code: "MXN", tz: "America/Mexico_City" },
+        { city: "ホーチミン", cityEn: "Ho Chi Minh", country: "ベトナム", countryEn: "Vietnam", code: "VND", tz: "Asia/Ho_Chi_Minh" },
+        { city: "バンクーバー", cityEn: "Vancouver", country: "カナダ", countryEn: "Canada", code: "CAD", tz: "America/Vancouver" },
+        { city: "クアラルンプール", cityEn: "Kuala Lumpur", country: "マレーシア", countryEn: "Malaysia", code: "MYR", tz: "Asia/Kuala_Lumpur" },
+        { city: "ジャカルタ", cityEn: "Jakarta", country: "インドネシア", countryEn: "Indonesia", code: "IDR", tz: "Asia/Jakarta" },
+        { city: "マニラ", cityEn: "Manila", country: "フィリピン", countryEn: "Philippines", code: "PHP", tz: "Asia/Manila" }
     ];
 
     let pinnedCities = ["Asia/Tokyo", "America/New_York", "Europe/London"];
