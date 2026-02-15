@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Nomad - City Clock & Currency</title>
+    <title>Global Nomad - 50 Cities Edition</title>
     <style>
         body {
             margin: 0; padding: 0;
@@ -39,11 +39,11 @@
         
         .result-box { margin-top: 1.2rem; padding: 1.2rem; background: #f0f7ff; border-radius: 12px; font-size: 1.1rem; font-weight: bold; line-height: 1.5; }
         
-        #clockList { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 1rem; }
+        #clockList { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 1rem; max-height: 300px; overflow-y: auto; padding: 5px; }
         .clock-card { background: #f8f9fa; padding: 12px; border-radius: 15px; border: 1px solid #eee; position: relative; text-align: left; }
-        .clock-city { font-size: 1rem; font-weight: bold; color: #1a1a1a; }
-        .clock-country { font-size: 0.7rem; color: #888; margin-bottom: 5px; }
-        .clock-time { font-size: 1.4rem; font-weight: bold; color: #007bff; font-family: 'Courier New', monospace; }
+        .clock-city { font-size: 0.9rem; font-weight: bold; color: #1a1a1a; }
+        .clock-country { font-size: 0.65rem; color: #888; margin-bottom: 5px; }
+        .clock-time { font-size: 1.2rem; font-weight: bold; color: #007bff; font-family: 'Courier New', monospace; }
         .remove-btn { background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 14px; cursor: pointer; position: absolute; top: -8px; right: -8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
     </style>
 </head>
@@ -69,7 +69,7 @@
             <select id="toCurr"></select>
         </div>
         <button onclick="calculateCurrency()">換算する</button>
-        <div class="result-box" id="currResult">金額を入力して換算ボタンを<br>押してください</div>
+        <div class="result-box" id="currResult">換算ボタンを押してください</div>
     </div>
 
     <div id="time" class="content">
@@ -84,38 +84,73 @@
 </div>
 
 <script>
-    // 都市ベースのデータリスト
     const locations = [
+        // アジア
         { city: "東京", country: "日本", curr: "円", code: "JPY", tz: "Asia/Tokyo" },
-        { city: "ニューヨーク", country: "アメリカ", curr: "ドル", code: "USD", tz: "America/New_York" },
+        { city: "大阪", country: "日本", curr: "円", code: "JPY", tz: "Asia/Tokyo" },
+        { city: "ソウル", country: "韓国", curr: "ウォン", code: "KRW", tz: "Asia/Seoul" },
+        { city: "北京", country: "中国", curr: "元", code: "CNY", tz: "Asia/Beijing" },
+        { city: "上海", country: "中国", curr: "元", code: "CNY", tz: "Asia/Shanghai" },
+        { city: "香港", country: "香港", curr: "ドル", code: "HKD", tz: "Asia/Hong_Kong" },
+        { city: "台北", country: "台湾", curr: "ドル", code: "TWD", tz: "Asia/Taipei" },
+        { city: "シンガポール", country: "シンガポール", curr: "ドル", code: "SGD", tz: "Asia/Singapore" },
+        { city: "バンコク", country: "タイ", curr: "バーツ", code: "THB", tz: "Asia/Bangkok" },
+        { city: "ホーチミン", country: "ベトナム", curr: "ドン", code: "VND", tz: "Asia/Ho_Chi_Minh" },
+        { city: "クアラルンプール", country: "マレーシア", curr: "リンギット", code: "MYR", tz: "Asia/Kuala_Lumpur" },
+        { city: "ジャカルタ", country: "インドネシア", curr: "ルピア", code: "IDR", tz: "Asia/Jakarta" },
+        { city: "マニラ", country: "フィリピン", curr: "ペソ", code: "PHP", tz: "Asia/Manila" },
+        { city: "ムンバイ", country: "インド", curr: "ルピー", code: "INR", tz: "Asia/Kolkata" },
+        { city: "デリー", country: "インド", curr: "ルピー", code: "INR", tz: "Asia/Kolkata" },
+        { city: "ドバイ", country: "アラブ首長国連邦", curr: "ディルハム", code: "AED", tz: "Asia/Dubai" },
+        { city: "リヤド", country: "サウジアラビア", curr: "リヤル", code: "SAR", tz: "Asia/Riyadh" },
+        { city: "エルサレム", country: "イスラエル", curr: "シェケル", code: "ILS", tz: "Asia/Jerusalem" },
+        { city: "イスタンブール", country: "トルコ", curr: "リラ", code: "TRY", tz: "Europe/Istanbul" },
+        // ヨーロッパ
         { city: "ロンドン", country: "イギリス", curr: "ポンド", code: "GBP", tz: "Europe/London" },
         { city: "パリ", country: "フランス", curr: "ユーロ", code: "EUR", tz: "Europe/Paris" },
-        { city: "シドニー", country: "オーストラリア", curr: "ドル", code: "AUD", tz: "Australia/Sydney" },
-        { city: "上海", country: "中国", curr: "元", code: "CNY", tz: "Asia/Shanghai" },
-        { city: "ソウル", country: "韓国", curr: "ウォン", code: "KRW", tz: "Asia/Seoul" },
-        { city: "台北", country: "台湾", curr: "ドル", code: "TWD", tz: "Asia/Taipei" },
-        { city: "香港", country: "香港", curr: "ドル", code: "HKD", tz: "Asia/Hong_Kong" },
-        { city: "バンコク", country: "タイ", curr: "バーツ", code: "THB", tz: "Asia/Bangkok" },
-        { city: "シンガポール", country: "シンガポール", curr: "ドル", code: "SGD", tz: "Asia/Singapore" },
-        { city: "ホーチミン", country: "ベトナム", curr: "ドン", code: "VND", tz: "Asia/Ho_Chi_Minh" },
-        { city: "トロント", country: "カナダ", curr: "ドル", code: "CAD", tz: "America/Toronto" },
-        { city: "ロサンゼルス", country: "アメリカ", curr: "ドル", code: "USD", tz: "America/Los_Angeles" },
-        { city: "ドバイ", country: "アラブ首長国連邦", curr: "ディルハム", code: "AED", tz: "Asia/Dubai" },
-        { city: "ムンバイ", country: "インド", curr: "ルピー", code: "INR", tz: "Asia/Kolkata" },
-        { city: "イスタンブール", country: "トルコ", curr: "リラ", code: "TRY", tz: "Europe/Istanbul" },
-        { city: "サンパウロ", country: "ブラジル", curr: "レアル", code: "BRL", tz: "America/Sao_Paulo" },
+        { city: "ベルリン", country: "ドイツ", curr: "ユーロ", code: "EUR", tz: "Europe/Berlin" },
+        { city: "ローマ", country: "イタリア", curr: "ユーロ", code: "EUR", tz: "Europe/Rome" },
+        { city: "マドリード", country: "スペイン", curr: "ユーロ", code: "EUR", tz: "Europe/Madrid" },
+        { city: "アムステルダム", country: "オランダ", curr: "ユーロ", code: "EUR", tz: "Europe/Amsterdam" },
         { city: "チューリッヒ", country: "スイス", curr: "フラン", code: "CHF", tz: "Europe/Zurich" },
-        { city: "ローマ", country: "イタリア", curr: "ユーロ", code: "EUR", tz: "Europe/Rome" }
+        { city: "ウィーン", country: "オーストリア", curr: "ユーロ", code: "EUR", tz: "Europe/Vienna" },
+        { city: "ストックホルム", country: "スウェーデン", curr: "クローナ", code: "SEK", tz: "Europe/Stockholm" },
+        { city: "オスロ", country: "ノルウェー", curr: "クローネ", code: "NOK", tz: "Europe/Oslo" },
+        { city: "コペンハーゲン", country: "デンマーク", curr: "クローネ", code: "DKK", tz: "Europe/Copenhagen" },
+        { city: "ワルシャワ", country: "ポーランド", curr: "ズロチ", code: "PLN", tz: "Europe/Warsaw" },
+        { city: "プラハ", country: "チェコ", curr: "コルナ", code: "CZK", tz: "Europe/Prague" },
+        { city: "アテネ", country: "ギリシャ", curr: "ユーロ", code: "EUR", tz: "Europe/Athens" },
+        // 北米・中南米
+        { city: "ニューヨーク", country: "アメリカ", curr: "ドル", code: "USD", tz: "America/New_York" },
+        { city: "ロサンゼルス", country: "アメリカ", curr: "ドル", code: "USD", tz: "America/Los_Angeles" },
+        { city: "シカゴ", country: "アメリカ", curr: "ドル", code: "USD", tz: "America/Chicago" },
+        { city: "トロント", country: "カナダ", curr: "ドル", code: "CAD", tz: "America/Toronto" },
+        { city: "バンクーバー", country: "カナダ", curr: "ドル", code: "CAD", tz: "America/Vancouver" },
+        { city: "メキシコシティ", country: "メキシコ", curr: "ペソ", code: "MXN", tz: "America/Mexico_City" },
+        { city: "サンパウロ", country: "ブラジル", curr: "レアル", code: "BRL", tz: "America/Sao_Paulo" },
+        { city: "ブエノスアイレス", country: "アルゼンチン", curr: "ペソ", code: "ARS", tz: "America/Argentina/Buenos_Aires" },
+        { city: "サンティアゴ", country: "チリ", curr: "ペソ", code: "CLP", tz: "America/Santiago" },
+        { city: "ボゴタ", country: "コロンビア", curr: "ペソ", code: "COP", tz: "America/Bogota" },
+        { city: "リマ", country: "ペルー", curr: "ソル", code: "PEN", tz: "America/Lima" },
+        // オセアニア・アフリカ
+        { city: "シドニー", country: "オーストラリア", curr: "ドル", code: "AUD", tz: "Australia/Sydney" },
+        { city: "メルボルン", country: "オーストラリア", curr: "ドル", code: "AUD", tz: "Australia/Melbourne" },
+        { city: "オークランド", country: "ニュージーランド", curr: "ドル", code: "NZD", tz: "Pacific/Auckland" },
+        { city: "カイロ", country: "エジプト", curr: "ポンド", code: "EGP", tz: "Africa/Cairo" },
+        { city: "ヨハネスブルグ", country: "南アフリカ", curr: "ランド", code: "ZAR", tz: "Africa/Johannesburg" },
+        { city: "ナイロビ", country: "ケニア", curr: "シリング", code: "KES", tz: "Africa/Nairobi" },
+        { city: "カサブランカ", country: "モロッコ", curr: "ディルハム", code: "MAD", tz: "Africa/Casablanca" }
     ];
 
     const apiKey = 'e49db887bd065a8600690b11';
-    let pinnedCities = ["Asia/Tokyo", "America/New_York", "Europe/London"];
+    let pinnedCities = ["Asia/Tokyo", "America/New_York", "Europe/London", "Europe/Paris"];
 
     function init() {
         const fromS = document.getElementById('fromCurr');
         const toS = document.getElementById('toCurr');
         const timeS = document.getElementById('timeSelect');
 
+        // 都市名で五十音順（アルファベット順）にソート
         locations.sort((a, b) => a.city.localeCompare(b.city, 'ja')).forEach(l => {
             fromS.add(new Option(`${l.city} (${l.code})`, l.code));
             toS.add(new Option(`${l.city} (${l.code})`, l.code));
@@ -154,7 +189,8 @@
         const list = document.getElementById('clockList');
         list.innerHTML = "";
         pinnedCities.forEach(tz => {
-            const l = locations.find(item => item.tz === tz) || {city: tz.split('/')[1], country: ""};
+            const l = locations.find(item => item.tz === tz);
+            if(!l) return;
             const div = document.createElement('div');
             div.className = 'clock-card';
             div.innerHTML = `
